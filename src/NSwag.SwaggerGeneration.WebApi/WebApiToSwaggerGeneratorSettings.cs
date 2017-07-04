@@ -64,6 +64,9 @@ namespace NSwag.SwaggerGeneration.WebApi
         /// <summary>Gets or sets a value indicating whether to add path parameters which are missing in the action method.</summary>
         public bool AddMissingPathParameters { get; set; }
 
+        /// <summary>Ignores static methods when set to true.</summary>
+        public bool IgnoreStaticMethods { get; set; }
+
         internal JsonContract ResolveContract(Type parameterType)
         {
             return ActualContractResolver.ResolveContract(parameterType);

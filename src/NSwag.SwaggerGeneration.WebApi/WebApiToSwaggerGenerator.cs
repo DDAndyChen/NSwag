@@ -129,7 +129,7 @@ namespace NSwag.SwaggerGeneration.WebApi
             if (!hasIgnoreAttribute)
             {
                 var operations = new List<Tuple<SwaggerOperationDescription, MethodInfo>>();
-                foreach (var method in GetActionMethods(controllerType))
+                foreach (var method in GetActionMethods(controllerType, Settings.IgnoreStaticMethods))
                 {
                     var httpPaths = GetHttpPaths(controllerType, method).ToList();
                     var httpMethods = GetSupportedHttpMethods(method).ToList();
@@ -212,14 +212,14 @@ namespace NSwag.SwaggerGeneration.WebApi
             return true;
         }
 
-        private static IEnumerable<MethodInfo> GetActionMethods(Type controllerType)
+        private static IEnumerable<MethodInfo> GetActionMethods(Type controllerType, bool ignoreStaticMethods = false)
         {
             var methods = controllerType.GetRuntimeMethods().Where(m => m.IsPublic);
             return methods.Where(m =>
                 m.IsSpecialName == false && // avoid property methods
                 m.DeclaringType != null &&
                 m.DeclaringType != typeof(object) &&
-                m.IsStatic == false &&
+                (!ignoreStaticMethods || m.IsStatic == false)&&
                 m.GetCustomAttributes().All(a => a.GetType().Name != "SwaggerIgnoreAttribute" && a.GetType().Name != "NonActionAttribute") &&
                 m.DeclaringType.FullName.StartsWith("Microsoft.AspNet") == false && // .NET Core (Web API & MVC)
                 m.DeclaringType.FullName != "System.Web.Http.ApiController" &&
