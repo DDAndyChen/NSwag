@@ -67,6 +67,9 @@ namespace NSwag.SwaggerGeneration.WebApi
         /// <summary>Ignores static methods when set to true.</summary>
         public bool IgnoreStaticMethods { get; set; }
 
+        /// <summary>Only allows function methods when set to true.</summary>
+        public bool OnlyAllowFunctionMethods { get; set; }
+
         internal JsonContract ResolveContract(Type parameterType)
         {
             return ActualContractResolver.ResolveContract(parameterType);

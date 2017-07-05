@@ -129,7 +129,7 @@ namespace NSwag.SwaggerGeneration.WebApi
             if (!hasIgnoreAttribute)
             {
                 var operations = new List<Tuple<SwaggerOperationDescription, MethodInfo>>();
-                foreach (var method in GetActionMethods(controllerType, Settings.IgnoreStaticMethods))
+                foreach (var method in GetActionMethods(controllerType, Settings.IgnoreStaticMethods, Settings.OnlyAllowFunctionMethods))
                 {
                     var httpPaths = GetHttpPaths(controllerType, method).ToList();
                     var httpMethods = GetSupportedHttpMethods(method).ToList();
@@ -212,7 +212,7 @@ namespace NSwag.SwaggerGeneration.WebApi
             return true;
         }
 
-        private static IEnumerable<MethodInfo> GetActionMethods(Type controllerType, bool ignoreStaticMethods = false)
+        private static IEnumerable<MethodInfo> GetActionMethods(Type controllerType, bool ignoreStaticMethods = false, bool onlyAllowFunctionMethods = false)
         {
             var methods = controllerType.GetRuntimeMethods().Where(m => m.IsPublic);
             return methods.Where(m =>
@@ -220,6 +220,7 @@ namespace NSwag.SwaggerGeneration.WebApi
                 m.DeclaringType != null &&
                 m.DeclaringType != typeof(object) &&
                 (!ignoreStaticMethods || m.IsStatic == false)&&
+                (!onlyAllowFunctionMethods || m.GetCustomAttributes().Any(a => a.GetType().Name == "FunctionNameAttribute")) &&
                 m.GetCustomAttributes().All(a => a.GetType().Name != "SwaggerIgnoreAttribute" && a.GetType().Name != "NonActionAttribute") &&
                 m.DeclaringType.FullName.StartsWith("Microsoft.AspNet") == false && // .NET Core (Web API & MVC)
                 m.DeclaringType.FullName != "System.Web.Http.ApiController" &&
@@ -261,9 +262,13 @@ namespace NSwag.SwaggerGeneration.WebApi
 
             var routeAttributes = GetRouteAttributes(method.GetCustomAttributes()).ToList();
 
+            bool isFunction = !routeAttributes.Any();
+
+            routeAttributes.AddRange(GetRouteAttributesOnFunction(method));
+
             // .NET Core: RouteAttribute on class level
-            var routeAttributeOnClass = GetRouteAttribute(controllerType);
-            var routePrefixAttribute = GetRoutePrefixAttribute(controllerType);
+            var routeAttributeOnClass = isFunction? null : GetRouteAttribute(controllerType);
+            var routePrefixAttribute = isFunction? null : GetRoutePrefixAttribute(controllerType);
 
             if (routeAttributes.Any())
             {
@@ -361,6 +366,21 @@ namespace NSwag.SwaggerGeneration.WebApi
             return null;
         }
 
+        private IEnumerable<RouteAttributeFacade> GetRouteAttributesOnFunction(MethodInfo method)
+        {
+            var facades = new List<RouteAttributeFacade>();
+
+            facades.AddRange(method.GetParameters().SelectMany(p => p.GetCustomAttributes()).Select(RouteAttributeFacade.TryMakeFromFunctionParameter).Where(a => a?.Template != null));
+
+            if (!facades.Any())
+            {
+                // get template from FunctionName
+                facades.AddRange(method.GetCustomAttributes().Select(RouteAttributeFacade.TryMakeFromFunction).Where(a => a?.Template != null));
+            }
+
+            return facades;
+        }
+
         private IEnumerable<RouteAttributeFacade> GetRouteAttributes(IEnumerable<Attribute> attributes)
         {
             return attributes.Select(RouteAttributeFacade.TryMake).Where(a => a?.Template != null);
@@ -393,10 +413,16 @@ namespace NSwag.SwaggerGeneration.WebApi
             var actionName = GetActionName(method);
 
             var httpMethods = GetSupportedHttpMethodsFromAttributes(method).ToArray();
-            foreach (var httpMethod in httpMethods)
+
+            var allMethods = GetSupportedHttpMethodsFromFunctionParameter(method).ToList();
+            allMethods.AddRange(httpMethods);
+
+            allMethods = allMethods.Distinct().ToList();
+
+            foreach (var httpMethod in allMethods)
                 yield return httpMethod;
 
-            if (httpMethods.Length == 0)
+            if (allMethods.Count == 0)
             {
                 if (actionName.StartsWith("Get", StringComparison.OrdinalIgnoreCase))
                     yield return SwaggerOperationMethod.Get;
@@ -414,6 +440,27 @@ namespace NSwag.SwaggerGeneration.WebApi
                     yield return SwaggerOperationMethod.Head;
                 else
                     yield return SwaggerOperationMethod.Post;
+            }
+        }
+
+        private IEnumerable<SwaggerOperationMethod> GetSupportedHttpMethodsFromFunctionParameter(MethodInfo method)
+        {
+            dynamic attribute = method.GetParameters().SelectMany(p => p.GetCustomAttributes())
+                .FirstOrDefault(a => a.GetType().GetTypeInfo().Name.Equals("HttpTriggerAttribute"));
+
+            var methods = (string[])attribute?.Methods;
+            if (methods == null)
+            {
+                yield break;
+            }
+
+            foreach (var s in methods)
+            {
+                SwaggerOperationMethod httpMethod;
+                if (Enum.TryParse(s, true, out httpMethod))
+                {
+                    yield return httpMethod;
+                }
             }
         }
 
