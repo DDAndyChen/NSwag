@@ -43,10 +43,11 @@ namespace NSwag.Annotations
         /// <summary>Initializes a new instance of the <see cref="SwaggerResponseAttribute"/> class.</summary>
         /// <param name="httpStatusCode">The HTTP status code for which the result type applies.</param>
         /// <param name="responseType">The JSON result type of the MVC or Web API action method.</param>
-        public SwaggerResponseAttribute(HttpStatusCode httpStatusCode, Type responseType)
+        public SwaggerResponseAttribute(HttpStatusCode httpStatusCode, Type responseType, string description)
         {
             StatusCode = ((int)httpStatusCode).ToString();
             Type = responseType;
+            Description = description;
         }
 
         /// <summary>Gets the HTTP status code.</summary>
