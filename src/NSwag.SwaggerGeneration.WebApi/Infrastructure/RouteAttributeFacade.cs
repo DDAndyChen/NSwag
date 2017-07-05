@@ -59,5 +59,27 @@ namespace NSwag.SwaggerGeneration.WebApi.Infrastructure
 
             return null;
         }
+
+        public static RouteAttributeFacade TryMakeFromFunctionParameter(Attribute a)
+        {
+            var type = a.GetType();
+
+            if (type.Name != "HttpTriggerAttribute") return null;
+
+            var template = type.GetRuntimeProperty("Route");
+
+            return template != null ? new RouteAttributeFacade(a, template) : null;
+        }
+
+        public static RouteAttributeFacade TryMakeFromFunction(Attribute a)
+        {
+            var type = a.GetType();
+
+            if (type.Name != "FunctionNameAttribute") return null;
+
+            var template = type.GetRuntimeProperty("Name");
+
+            return template != null ? new RouteAttributeFacade(a, template) : null;
+        }
     }
 }

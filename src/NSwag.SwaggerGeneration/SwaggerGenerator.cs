@@ -42,8 +42,18 @@ namespace NSwag.SwaggerGeneration
         /// <returns>The created parameter.</returns>
         public async Task<SwaggerParameter> CreatePrimitiveParameterAsync(string name, ParameterInfo parameter)
         {
-            var documentation = await parameter.GetDescriptionAsync(parameter.GetCustomAttributes()).ConfigureAwait(false);
-            return await CreatePrimitiveParameterAsync(name, documentation, parameter.ParameterType, parameter.GetCustomAttributes().ToList()).ConfigureAwait(false);
+            var attributes = parameter.GetCustomAttributes().ToArray();
+            var documentation = await parameter.GetDescriptionAsync(attributes).ConfigureAwait(false);
+            var title = GetParameterTitle(attributes);
+
+            return await CreatePrimitiveParameterAsync(name, documentation, parameter.ParameterType, parameter.GetCustomAttributes().ToList(), title).ConfigureAwait(false);
+        }
+
+        private string GetParameterTitle(Attribute[] attributes)
+        {
+            dynamic flowDescAttr = attributes.SingleOrDefault(a => a.GetType().Name == "FlowTitleAttribute");
+
+            return flowDescAttr != null ? flowDescAttr.Description : string.Empty;
         }
 
         /// <summary>Creates a path parameter for a given type.</summary>
@@ -78,8 +88,9 @@ namespace NSwag.SwaggerGeneration
         /// <param name="description">The description.</param>
         /// <param name="parameterType">Type of the parameter.</param>
         /// <param name="parentAttributes">The parent attributes.</param>
+        /// <param name="title">The title attribute for Flow</param>
         /// <returns></returns>
-        public async Task<SwaggerParameter> CreatePrimitiveParameterAsync(string name, string description, Type parameterType, IList<Attribute> parentAttributes)
+        public async Task<SwaggerParameter> CreatePrimitiveParameterAsync(string name, string description, Type parameterType, IList<Attribute> parentAttributes, string title = null)
         {
             var typeDescription = JsonObjectTypeDescription.FromType(parameterType, ResolveContract(parameterType), parentAttributes, _settings.DefaultEnumHandling);
 
@@ -120,6 +131,9 @@ namespace NSwag.SwaggerGeneration
 
             if (description != string.Empty)
                 operationParameter.Description = description;
+
+            if (title != null)
+                operationParameter.ExtensionData = new Dictionary<string, object>{{ "x-ms-summary", title } };
 
             return operationParameter;
         }
