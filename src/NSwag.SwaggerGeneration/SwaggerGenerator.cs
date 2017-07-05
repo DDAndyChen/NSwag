@@ -44,16 +44,9 @@ namespace NSwag.SwaggerGeneration
         {
             var attributes = parameter.GetCustomAttributes().ToArray();
             var documentation = await parameter.GetDescriptionAsync(attributes).ConfigureAwait(false);
-            var title = GetParameterTitle(attributes);
+            var title = attributes.GetFlowTitle();
 
             return await CreatePrimitiveParameterAsync(name, documentation, parameter.ParameterType, parameter.GetCustomAttributes().ToList(), title).ConfigureAwait(false);
-        }
-
-        private string GetParameterTitle(Attribute[] attributes)
-        {
-            dynamic flowDescAttr = attributes.SingleOrDefault(a => a.GetType().Name == "FlowTitleAttribute");
-
-            return flowDescAttr != null ? flowDescAttr.Description : string.Empty;
         }
 
         /// <summary>Creates a path parameter for a given type.</summary>
