@@ -70,6 +70,14 @@ export interface FileParameter {
 }
 
 <#}#>
+<#if(Model.RequiresFileResponseInterface){#>
+export interface FileResponse {
+    data: Blob;
+    fileName?: string;
+	headers?: { [name: string]: any };
+}
+
+<#}#>
 <#if(Model.RequiresSwaggerExceptionClass){#>
 export class SwaggerException extends Error {
     message: string;
