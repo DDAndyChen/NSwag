@@ -70,6 +70,9 @@ namespace NSwag.SwaggerGeneration.WebApi
         /// <summary>Only allows function methods when set to true.</summary>
         public bool OnlyAllowFunctionMethods { get; set; }
 
+        /// <summary>Keep unused parameters in path when set to true.</summary>
+        public bool KeepUnusedPathParameters { get; set; }
+
         internal JsonContract ResolveContract(Type parameterType)
         {
             return ActualContractResolver.ResolveContract(parameterType);

@@ -161,7 +161,11 @@ namespace NSwag.SwaggerGeneration.WebApi.Processors
                 }
             }
 
-            RemoveUnusedPathParameters(context.OperationDescription, httpPath);
+            if (!_settings.KeepUnusedPathParameters)
+            {
+                RemoveUnusedPathParameters(context.OperationDescription, httpPath);
+            }
+
             UpdateConsumedTypes(context.OperationDescription);
 
             EnsureSingleBodyParameter(context.OperationDescription);
