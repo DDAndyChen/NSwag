@@ -6,12 +6,10 @@
 // <author>Rico Suter, mail@rsuter.com</author>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NJsonSchema.Generation;
 using NSwag.SwaggerGeneration.Processors;
+using NSwag.SwaggerGeneration.Processors.Collections;
 using NSwag.SwaggerGeneration.WebApi.Processors;
 
 namespace NSwag.SwaggerGeneration.WebApi
@@ -22,7 +20,7 @@ namespace NSwag.SwaggerGeneration.WebApi
         /// <summary>Initializes a new instance of the <see cref="WebApiToSwaggerGeneratorSettings"/> class.</summary>
         public WebApiToSwaggerGeneratorSettings()
         {
-            NullHandling = NJsonSchema.NullHandling.Swagger;
+            SchemaType = NJsonSchema.SchemaType.Swagger2;
             OperationProcessors.Add(new OperationParameterProcessor(this));
             OperationProcessors.Add(new OperationResponseProcessor(this));
         }
@@ -31,17 +29,17 @@ namespace NSwag.SwaggerGeneration.WebApi
         public string DefaultUrlTemplate { get; set; } = "api/{controller}/{id?}";
 
         /// <summary>Gets or sets the Swagger specification title.</summary>
-        public string Title { get; set; } = "Web API Swagger specification";
+        public string Title { get; set; }
 
         /// <summary>Gets or sets the Swagger specification description.</summary>
         public string Description { get; set; }
 
         /// <summary>Gets or sets the Swagger specification version.</summary>
-        public string Version { get; set; } = "1.0.0";
+        public string Version { get; set; }
 
         /// <summary>Gets the operation processor.</summary>
         [JsonIgnore]
-        public IList<IOperationProcessor> OperationProcessors { get; } = new List<IOperationProcessor>
+        public OperationProcessorCollection OperationProcessors { get; } = new OperationProcessorCollection
         {
             new ApiVersionProcessor(),
             new OperationSummaryAndDescriptionProcessor(),
@@ -50,7 +48,7 @@ namespace NSwag.SwaggerGeneration.WebApi
 
         /// <summary>Gets the operation processor.</summary>
         [JsonIgnore]
-        public IList<IDocumentProcessor> DocumentProcessors { get; } = new List<IDocumentProcessor>
+        public DocumentProcessorCollection DocumentProcessors { get; } = new DocumentProcessorCollection
         {
             new DocumentTagsProcessor()
         };
@@ -72,10 +70,5 @@ namespace NSwag.SwaggerGeneration.WebApi
 
         /// <summary>Keep unused parameters in path when set to true.</summary>
         public bool KeepUnusedPathParameters { get; set; }
-
-        internal JsonContract ResolveContract(Type parameterType)
-        {
-            return ActualContractResolver.ResolveContract(parameterType);
-        }
     }
 }

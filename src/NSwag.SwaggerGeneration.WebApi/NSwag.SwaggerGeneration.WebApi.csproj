@@ -2,14 +2,13 @@
   <PropertyGroup>
     <TargetFrameworks>net45</TargetFrameworks>
     <Description>NSwag: The Swagger API toolchain for .NET and TypeScript</Description>
-    <Version>11.2.0</Version>
+    <Version>11.12.7</Version>
     <PackageTags>Swagger Documentation WebApi AspNet TypeScript CodeGen</PackageTags>
     <Copyright>Copyright © Rico Suter, 2017</Copyright>
     <PackageLicenseUrl>https://github.com/NSwag/NSwag/blob/master/LICENSE.md</PackageLicenseUrl>
     <PackageProjectUrl>http://NSwag.org</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>NSwag.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>false</SignAssembly>
     <Authors>Rico Suter</Authors>
     <PackageIconUrl>https://raw.githubusercontent.com/NSwag/NSwag/master/assets/NuGetIcon.png</PackageIconUrl>
     <Company />
@@ -22,7 +21,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="NSwag.SwaggerGeneration" Version="11.3.3" />
+    <PackageReference Include="NJsonSchema" Version="9.10.6" />
+    <PackageReference Include="NSwag.SwaggerGeneration" Version="11.12.7" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="Microsoft.CSharp" />
